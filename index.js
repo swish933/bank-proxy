@@ -2,7 +2,7 @@ const express = require("express");
 const cors = require("cors");
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 8080;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
 
@@ -86,6 +86,6 @@ app.use((req, res) => {
 	res.status(404).json({ error: "Route not found." });
 });
 
-app.listen(PORT, () => {
-	console.log(`Bank proxy running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", () => {
+	console.log(`Bank proxy running on port ${PORT}`);
 });
