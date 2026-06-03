@@ -130,11 +130,7 @@ app.post(
 					to: "ikemnomso@isslng.com",
 					subject: `New Account Application: ${clientName}`,
 					text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-					attachments: [
-						{
-							pdfBuffer,
-						},
-					],
+					attachments: [pdfBuffer.toString("base64")], // Convert buffer to base64 string for transmission
 				}),
 			});
 
