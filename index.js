@@ -106,7 +106,7 @@ app.post(
 			// Send the email
 			await transporter.sendMail({
 				from: '"NSL Onboarding" <no-reply@nslng.com>',
-				to: "ikemnomso@isslng.com", // The account that should receive the PDF
+				to: "olumide.oyemade@nslng.com", // The account that should receive the PDF
 				subject: `New Account Application: ${clientName}`,
 				text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
 				attachments: [
