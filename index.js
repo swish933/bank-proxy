@@ -6,7 +6,7 @@ const nodemailer = require("nodemailer");
 const app = express();
 const PORT = process.env.PORT || 8080;
 const TENANT_ID = process.env.TENANT_ID || "demo";
-const BASE_URL = "http://api.issl.ng:7777";
+const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
 const upload = multer({ storage: multer.memoryStorage() });
 
 app.use(
@@ -24,7 +24,7 @@ app.get("/", (req, res) => {
 // GET /api/banks — fetch list of banks
 app.get("/api/banks", async (req, res) => {
 	try {
-		const response = await fetch(`${BASE_URL}/ibank/api/v1/getAllBanks`, {
+		const response = await fetch(`${BASE_URL}/getAllBanks`, {
 			method: "GET",
 			headers: {
 				"x-tenantid": TENANT_ID,
@@ -61,7 +61,7 @@ app.get("/api/account-name", async (req, res) => {
 
 	try {
 		const response = await fetch(
-			`${BASE_URL}/ibank/api/v1/accountNameLookup?bankcode=${bankcode}&nuban=${nuban}`,
+			`${BASE_URL}/accountNameLookup?bankcode=${bankcode}&nuban=${nuban}`,
 			{
 				method: "GET",
 				headers: {
@@ -93,52 +93,29 @@ app.post(
 			const pdfBuffer = req.file.buffer; // The PDF file sent from the frontend
 
 			// Configure your email transport (e.g., SMTP details from your provider)
-			// const transporter = nodemailer.createTransport({
-			// 	host: process.env.EMAIL_HOST,
-			// 	port: process.env.EMAIL_PORT || 587,
-			// 	secure: false,
-			// 	auth: {
-			// 		user: process.env.EMAIL_USER,
-			// 		pass: process.env.EMAIL_PASS,
-			// 	},
-			// });
-
-			// Send the email
-			// await transporter.sendMail({
-			// 	from: '"NSL Onboarding" <no-reply@nslng.com>',
-			// 	to: "ikemnomso@isslng.com",
-			// 	subject: `New Account Application: ${clientName}`,
-			// 	text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-			// 	attachments: [
-			// 		{
-			// 			filename: req.file.originalname,
-			// 			content: pdfBuffer,
-			// 		},
-			// 	],
-			// });
-
-			// const data = await response.json();
-			// return res.json(data);
-
-			const response = await fetch(`${BASE_URL}/onboarding-api/2.0/sendmail`, {
-				method: "POST",
-				headers: {
-					"x-tenantid": TENANT_ID,
+			const transporter = nodemailer.createTransport({
+				host: process.env.EMAIL_HOST,
+				port: 587,
+				secure: false,
+				auth: {
+					user: process.env.EMAIL_USER,
+					pass: process.env.EMAIL_PASS,
 				},
-				body: JSON.stringify({
-					from: "NSL Onboarding <no-reply@nslng.com>",
-					to: "ikemnomso@isslng.com",
-					subject: `New Account Application: ${clientName}`,
-					text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-					attachments: [pdfBuffer.toString("base64")], // Convert buffer to base64 string for transmission
-				}),
 			});
 
-			if (!response.ok) {
-				return res.status(response.status).json({
-					error: `Upstream API error: ${response.statusText}`,
-				});
-			}
+			// Send the email
+			await transporter.sendMail({
+				from: '"NSL Onboarding" <no-reply@nslng.com>',
+				to: "ikemnomso@isslng.com", // The account that should receive the PDF
+				subject: `New Account Application: ${clientName}`,
+				text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
+				attachments: [
+					{
+						filename: req.file.originalname,
+						content: pdfBuffer, // Attach the buffer directly
+					},
+				],
+			});
 
 			res.status(200).json({ message: "Email sent successfully!" });
 		} catch (error) {
