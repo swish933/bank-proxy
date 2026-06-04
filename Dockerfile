@@ -23,14 +23,19 @@ COPY . .
 
 FROM base
 
-# Install Chrome in the final image
+# Add Google's apt repo, then install Chrome
 RUN apt-get update -qq && \
+    apt-get install --no-install-recommends -y wget gnupg ca-certificates && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" \
+      > /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update -qq && \
     apt-get install --no-install-recommends -y \
-    google-chrome-stable \
-    fonts-freefont-ttf \
+      google-chrome-stable \
+      fonts-freefont-ttf \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --from=build /app /app
 
-EXPOSE 3000
+EXPOSE 8080
 CMD [ "npm", "run", "start" ]
