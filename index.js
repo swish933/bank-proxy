@@ -8,7 +8,7 @@ const app = express();
 const PORT = process.env.PORT || 8080;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
-const upload = multer({ storage: memoryStorage() });
+// const upload = multer({ storage: memoryStorage() });
 
 app.use(
 	cors({
