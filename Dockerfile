@@ -25,8 +25,8 @@ FROM base
 # Install Chrome using the modern signed keyring approach
 RUN apt-get update -qq && \
     apt-get install -y wget gnupg ca-certificates && \
-    wget -q -O /usr/share/keyrings/google-chrome.gpg \
-      https://dl.google.com/linux/linux_signing_key.pub && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | \
+      gpg --dearmor -o /usr/share/keyrings/google-chrome.gpg && \
     echo "deb [arch=amd64 signed-by=/usr/share/keyrings/google-chrome.gpg] \
       http://dl.google.com/linux/chrome/deb/ stable main" \
       > /etc/apt/sources.list.d/google-chrome.list && \
