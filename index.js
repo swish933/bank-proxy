@@ -5,7 +5,7 @@ import { buildPdfHtml, renderPDF } from "./lib/template.js";
 // import { transporter } from "./lib/mailTransport.js";
 
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 10000;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
 // const upload = multer({ storage: memoryStorage() });
