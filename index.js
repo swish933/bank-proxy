@@ -1,8 +1,11 @@
 import express, { json } from "express";
 import cors from "cors";
+import net from "net";
 import "dotenv/config";
 import { buildPdfHtml, renderPDF } from "./lib/template.js";
 import { transporter } from "./lib/mailTransport.js";
+import pinoHttp from "pino-http";
+import logger from "./logger.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -15,6 +18,8 @@ app.use(
 		origin: process.env.ALLOWED_ORIGIN || "*",
 	}),
 );
+
+app.use(pinoHttp({ logger }));
 
 // Health check
 app.get("/", (req, res) => {
@@ -124,14 +129,19 @@ app.post("/api/generate-pdf", json({ limit: "50mb" }), async (req, res) => {
 app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 	try {
 		const { clientName, clientEmail, formState: formStateJson } = req.body;
+		const log = req.log;
 
 		if (!formStateJson) {
+			log.warn("Missing formState in request body");
 			return res.status(400).json({ error: "formState JSON is required" });
 		}
 
 		const formState = JSON.parse(formStateJson);
 		const html = buildPdfHtml(formState);
 		const pdfBuffer = await renderPDF(html);
+
+		log.info({ sizeBytes: pdfBuffer.length }, "PDF generated");
+
 		const lastName = formState.last_name || "Manifest";
 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
 
@@ -153,13 +163,16 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 				],
 			})
 			.then((info) => {
-				console.log("Mail sent:", info.response);
+				log.info(
+					{ messageId: info.messageId, response: info.response },
+					"Mail sent",
+				);
 			})
 			.catch((err) => {
-				console.error("Mail error:", err);
+				log.error({ err }, "Mail error");
 			});
 	} catch (err) {
-		console.error("send-application error:", err);
+		log.error({ err }, "send-application failed");
 		res
 			.status(500)
 			.json({ error: "Application submission failed", detail: err.message });
