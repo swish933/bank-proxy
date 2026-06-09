@@ -3,9 +3,9 @@ import cors from "cors";
 import net from "net";
 import "dotenv/config";
 import { buildPdfHtml, renderPDF } from "./lib/template.js";
+import logger from "./logger.js";
 import { transporter } from "./lib/mailTransport.js";
 import pinoHttp from "pino-http";
-import logger from "./logger.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
@@ -215,5 +215,5 @@ app.use((req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-	console.log(`Bank proxy running on port ${PORT}`);
+	logger.info(`Bank proxy running on port ${PORT}`);
 });
