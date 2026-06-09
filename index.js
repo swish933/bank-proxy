@@ -1,14 +1,14 @@
 import express, { json } from "express";
 import cors from "cors";
-// import multer, { memoryStorage } from "multer";
+import "dotenv/config";
 import { buildPdfHtml, renderPDF } from "./lib/template.js";
-// import { transporter } from "./lib/mailTransport.js";
+import { transporter } from "./lib/mailTransport.js";
 
 const app = express();
 const PORT = process.env.PORT || 10000;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
-// const upload = multer({ storage: memoryStorage() });
+const toEmail = process.env.RECEIPT_EMAIL || "";
 
 app.use(
 	cors({
@@ -84,47 +84,6 @@ app.get("/api/account-name", async (req, res) => {
 	}
 });
 
-// app.post(
-// 	"/api/send-application",
-// 	upload.single("applicationFile"),
-// 	async (req, res) => {
-// 		try {
-// 			const { clientName, clientEmail } = req.body;
-// 			const pdfBuffer = req.file.buffer; // The PDF file sent from the frontend
-
-// 			// Configure your email transport (e.g., SMTP details from your provider)
-// 			const transporter = nodemailer.createTransport({
-// 				host: process.env.EMAIL_HOST,
-// 				port: 587,
-// 				secure: false,
-// 				auth: {
-// 					user: process.env.EMAIL_USER,
-// 					pass: process.env.EMAIL_PASS,
-// 				},
-// 			});
-
-// 			// Send the email
-// 			await transporter.sendMail({
-// 				from: '"NSL Onboarding" <no-reply@nslng.com>',
-// 				to: "olumide.oyemade@nslng.com", // The account that should receive the PDF
-// 				subject: `New Account Application: ${clientName}`,
-// 				text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-// 				attachments: [
-// 					{
-// 						filename: req.file.originalname,
-// 						content: pdfBuffer, // Attach the buffer directly
-// 					},
-// 				],
-// 			});
-
-// 			res.status(200).json({ message: "Email sent successfully!" });
-// 		} catch (error) {
-// 			console.error("Email sending failed:", error);
-// 			res.status(500).json({ error: "Failed to send email" });
-// 		}
-// 	},
-// );
-
 /**
  * POST /api/generate-pdf
  * Body: JSON formState object (images as base64 data URIs)
@@ -159,51 +118,55 @@ app.post("/api/generate-pdf", json({ limit: "50mb" }), async (req, res) => {
 
 /**
  * POST /api/send-application
- * Drop-in replacement for the existing submit flow.
- * Body: multipart/form-data with clientName, clientEmail, and formState (JSON string)
+ * Body: application/json with clientName, clientEmail, and formState (as JSON string)
  * Generates the PDF server-side and emails it
  */
-// app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
-// 	try {
-// 		const { clientName, clientEmail, formState: formStateJson } = req.body;
+app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
+	try {
+		const { clientName, clientEmail, formState: formStateJson } = req.body;
 
-// 		if (!formStateJson) {
-// 			return res.status(400).json({ error: "formState JSON is required" });
-// 		}
+		if (!formStateJson) {
+			return res.status(400).json({ error: "formState JSON is required" });
+		}
 
-// 		const formState = JSON.parse(formStateJson);
-// 		const html = buildPdfHtml(formState);
-// 		const pdfBuffer = await renderPDF(html);
-// 		const lastName = formState.last_name || "Manifest";
-// 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
+		const formState = JSON.parse(formStateJson);
+		const html = buildPdfHtml(formState);
+		const pdfBuffer = await renderPDF(html);
+		const lastName = formState.last_name || "Manifest";
+		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
 
-// 		// Send the email
-// 		await transporter.sendMail({
-// 			from: '"NSL Onboarding" <no-reply@nslng.com>',
-// 			to: "ikemnomso@isslng.com",
-// 			subject: `New Account Application: ${clientName}`,
-// 			text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-// 			attachments: [
-// 				{
-// 					filename,
-// 					content: pdfBuffer,
-// 					contentType: "application/pdf",
-// 				},
-// 			],
-// 		});
+		// Send the email
+		const info = await transporter.sendMail({
+			from: '"NSL Onboarding" <stockmarket@nslng.com>',
+			to: toEmail,
+			subject: `New Account Application: ${clientName}`,
+			text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
+			attachments: [
+				{
+					filename,
+					content: pdfBuffer,
+					contentType: "application/pdf",
+				},
+			],
+		});
 
-// 		console.log(
-// 			`[send-application] PDF ready for ${clientName} <${clientEmail}> — ${pdfBuffer.length} bytes`,
-// 		);
+		console.log("Full Nodemailer Info:", JSON.stringify(info, null, 2));
+		console.log("Message ID:", info.messageId);
+		console.log("Accepted by:", info.accepted); // should show recipient email
+		console.log("Response:", info.response);
 
-// 		res.json({ ok: true, filename });
-// 	} catch (err) {
-// 		console.error("send-application error:", err);
-// 		res
-// 			.status(500)
-// 			.json({ error: "Application submission failed", detail: err.message });
-// 	}
-// });
+		console.log(
+			`[send-application] PDF ready for ${clientName} <${clientEmail}> — ${pdfBuffer.length} bytes`,
+		);
+
+		res.json({ ok: true, filename });
+	} catch (err) {
+		console.error("send-application error:", err);
+		res
+			.status(500)
+			.json({ error: "Application submission failed", detail: err.message });
+	}
+});
 
 // 404 fallback
 app.use((req, res) => {
