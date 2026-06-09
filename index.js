@@ -135,31 +135,29 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 		const lastName = formState.last_name || "Manifest";
 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
 
-		// Send the email
-		const info = await transporter.sendMail({
-			from: '"NSL Onboarding" <stockmarket@nslng.com>',
-			to: toEmail,
-			subject: `New Account Application: ${clientName}`,
-			text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
-			attachments: [
-				{
-					filename,
-					content: pdfBuffer,
-					contentType: "application/pdf",
-				},
-			],
-		});
-
-		console.log("Full Nodemailer Info:", JSON.stringify(info, null, 2));
-		console.log("Message ID:", info.messageId);
-		console.log("Accepted by:", info.accepted); // should show recipient email
-		console.log("Response:", info.response);
-
-		console.log(
-			`[send-application] PDF ready for ${clientName} <${clientEmail}> — ${pdfBuffer.length} bytes`,
-		);
-
 		res.json({ ok: true, filename });
+
+		// Send the email
+		await transporter
+			.sendMail({
+				from: '"NSL Onboarding" <stockmarket@nslng.com>',
+				to: toEmail,
+				subject: `New Account Application: ${clientName}`,
+				text: `A new application has been submitted by ${clientName} (${clientEmail}). Please find the brief attached.`,
+				attachments: [
+					{
+						filename,
+						content: pdfBuffer,
+						contentType: "application/pdf",
+					},
+				],
+			})
+			.then((info) => {
+				console.log("Mail sent:", info.response);
+			})
+			.catch((err) => {
+				console.error("Mail error:", err);
+			});
 	} catch (err) {
 		console.error("send-application error:", err);
 		res
