@@ -166,6 +166,36 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 	}
 });
 
+app.get("/api/test-ports", async (req, res) => {
+	const host = process.env.EMAIL_HOST;
+	const ports = [25, 465, 587, 2525];
+
+	const results = await Promise.all(
+		ports.map(
+			(port) =>
+				new Promise((resolve) => {
+					const socket = new net.Socket();
+					socket.setTimeout(5000);
+
+					socket
+						.connect(port, host, () => {
+							socket.destroy();
+							resolve({ port, status: "open" });
+						})
+						.on("error", (err) => {
+							resolve({ port, status: "blocked", error: err.message });
+						})
+						.on("timeout", () => {
+							socket.destroy();
+							resolve({ port, status: "timeout" });
+						});
+				}),
+		),
+	);
+
+	res.json({ host, results });
+});
+
 // 404 fallback
 app.use((req, res) => {
 	res.status(404).json({ error: "Route not found." });
