@@ -129,10 +129,9 @@ app.post("/api/generate-pdf", json({ limit: "50mb" }), async (req, res) => {
 app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 	try {
 		const { clientName, clientEmail, formState: formStateJson } = req.body;
-		const log = req.log;
 
 		if (!formStateJson) {
-			log.warn("Missing formState in request body");
+			logger.warn("Missing formState in request body");
 			return res.status(400).json({ error: "formState JSON is required" });
 		}
 
@@ -140,7 +139,7 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 		const html = buildPdfHtml(formState);
 		const pdfBuffer = await renderPDF(html);
 
-		log.info({ sizeBytes: pdfBuffer.length }, "PDF generated");
+		logger.info({ sizeBytes: pdfBuffer.length }, "PDF generated");
 
 		const lastName = formState.last_name || "Manifest";
 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
@@ -163,50 +162,20 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 				],
 			})
 			.then((info) => {
-				log.info(
+				logger.info(
 					{ messageId: info.messageId, response: info.response },
 					"Mail sent",
 				);
 			})
 			.catch((err) => {
-				log.error({ err }, "Mail error");
+				logger.error({ err }, "Mail error");
 			});
 	} catch (err) {
-		log.error({ err }, "send-application failed");
+		logger.error({ err }, "send-application failed");
 		res
 			.status(500)
 			.json({ error: "Application submission failed", detail: err.message });
 	}
-});
-
-app.get("/api/test-ports", async (req, res) => {
-	const host = process.env.EMAIL_HOST;
-	const ports = [25, 465, 587, 2525];
-
-	const results = await Promise.all(
-		ports.map(
-			(port) =>
-				new Promise((resolve) => {
-					const socket = new net.Socket();
-					socket.setTimeout(5000);
-
-					socket
-						.connect(port, host, () => {
-							socket.destroy();
-							resolve({ port, status: "open" });
-						})
-						.on("error", (err) => {
-							resolve({ port, status: "blocked", error: err.message });
-						})
-						.on("timeout", () => {
-							socket.destroy();
-							resolve({ port, status: "timeout" });
-						});
-				}),
-		),
-	);
-
-	res.json({ host, results });
 });
 
 // 404 fallback
