@@ -12,7 +12,6 @@
 	"license": "ISC",
 	"type": "module",
 	"dependencies": {
-		"@sparticuz/chromium": "^149.0.0",
 		"cors": "^2.8.6",
 		"dotenv": "^17.4.2",
 		"express": "^5.2.1",
@@ -20,7 +19,7 @@
 		"nodemailer": "^8.0.10",
 		"pino": "^10.3.1",
 		"pino-http": "^11.0.0",
-		"puppeteer-core": "^25.1.0"
+		"puppeteer-core": "^20.9.0"
 	},
 	"devDependencies": {
 		"pino-pretty": "^13.1.3"
