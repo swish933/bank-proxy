@@ -1,6 +1,5 @@
 import express, { json } from "express";
 import cors from "cors";
-import net from "net";
 import "dotenv/config";
 import { buildPdfHtml, renderPDF } from "./lib/template.js";
 import logger from "./logger.js";
