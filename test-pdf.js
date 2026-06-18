@@ -1,8 +1,8 @@
 // test-pdf.js
 import puppeteer from "puppeteer-core";
+import "dotenv/config";
 
-const CHROMIUM_PATH =
-	"C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe";
+const CHROMIUM_PATH = process.env.CHROME_PATH || "/usr/bin/chromium-browser";
 // const CHROMIUM_PATH = "C:\\pdf_generation_system\\chrome-win64\\chrome.exe";
 
 async function test() {
