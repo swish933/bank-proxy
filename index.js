@@ -10,7 +10,7 @@ const app = express();
 const PORT = process.env.PORT || 10000;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
-const toEmail = process.env.RECEIPT_EMAIL || "info@nslng.com";
+const toEmail = process.env.RECEIPT_EMAIL || "";
 
 app.use(
 	cors({
