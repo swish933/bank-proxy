@@ -4,7 +4,7 @@ services:
     container_name: nsl-pdf-generator
     restart: unless-stopped
     ports:
-      - "10000:10000"
+      - "9904:9904"
     env_file:
       - .env
     shm_size: "1gb"

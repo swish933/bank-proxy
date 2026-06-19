@@ -37,5 +37,5 @@ RUN apt-get update -qq && \
 
 COPY --from=build /app /app
 
-EXPOSE 10000
+EXPOSE 9904
 CMD ["npm", "run", "start"]
