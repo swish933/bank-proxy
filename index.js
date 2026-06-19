@@ -7,7 +7,7 @@ import { transporter } from "./lib/mailTransport.js";
 import pinoHttp from "pino-http";
 
 const app = express();
-const PORT = process.env.PORT || 10000;
+const PORT = process.env.PORT || 9904;
 const TENANT_ID = process.env.TENANT_ID || "demo";
 const BASE_URL = "http://api.issl.ng:7777/ibank/api/v1";
 const toEmail = process.env.RECEIPT_EMAIL || "";
