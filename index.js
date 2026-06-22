@@ -2,6 +2,7 @@ import express, { json } from "express";
 import cors from "cors";
 import "dotenv/config";
 import { buildPdfHtml, renderPDF } from "./lib/template.js";
+import { prependBrandPage } from "./lib/prependBrandPage.js";
 import logger from "./logger.js";
 import { transporter } from "./lib/mailTransport.js";
 import pinoHttp from "pino-http";
@@ -102,6 +103,7 @@ app.post("/api/generate-pdf", json({ limit: "50mb" }), async (req, res) => {
 
 		const html = buildPdfHtml(formState);
 		const pdfBuffer = await renderPDF(html);
+		const finalPdf = await prependBrandPage(pdfBuffer);
 
 		const lastName = formState.last_name || "Manifest";
 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
@@ -109,9 +111,9 @@ app.post("/api/generate-pdf", json({ limit: "50mb" }), async (req, res) => {
 		res.set({
 			"Content-Type": "application/pdf",
 			"Content-Disposition": `attachment; filename="${filename}"`,
-			"Content-Length": pdfBuffer.length,
+			"Content-Length": finalPdf.length,
 		});
-		res.send(pdfBuffer);
+		res.send(finalPdf);
 	} catch (err) {
 		console.error("PDF generation error:", err);
 		res
@@ -137,8 +139,9 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 		const formState = JSON.parse(formStateJson);
 		const html = buildPdfHtml(formState);
 		const pdfBuffer = await renderPDF(html);
+		const finalPdf = await prependBrandPage(pdfBuffer);
 
-		logger.info({ sizeBytes: pdfBuffer.length }, "PDF generated");
+		logger.info({ sizeBytes: finalPdf.length }, "PDF generated");
 
 		const lastName = formState.last_name || "Manifest";
 		const filename = `NSL_Onboarding_Brief_${lastName}.pdf`;
@@ -155,7 +158,7 @@ app.post("/api/send-application", json({ limit: "50mb" }), async (req, res) => {
 				attachments: [
 					{
 						filename,
-						content: pdfBuffer,
+						content: finalPdf,
 						contentType: "application/pdf",
 					},
 				],
